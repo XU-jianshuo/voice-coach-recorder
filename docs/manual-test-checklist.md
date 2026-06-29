@@ -1,205 +1,205 @@
-# Android Real-Device Manual Test Checklist
+# Android 真机手动测试清单
 
-Use this checklist after the Android MVP is built and the backend is running locally or on a reachable test server. This is a manual verification guide only; it does not add new app behavior.
+这份清单用于 Android MVP 合并后，在真实 Android 手机上做一轮端到端验证。它只是一份测试操作指南，不涉及任何新功能或代码改动。
 
-## 1. Start Backend With Mock Processing
+## 1. 启动后端 Mock 处理流程
 
-- [ ] Create or update backend environment settings from `.env.example`.
-- [ ] Confirm mock ASR is enabled:
+- [ ] 根据 `.env.example` 创建或更新后端环境配置。
+- [ ] 确认使用 mock ASR：
   - `ASR_PROVIDER=mock`
-- [ ] Confirm DeepSeek is disabled or not configured for mock analysis fallback:
+- [ ] 确认没有启用 DeepSeek，或者没有配置 DeepSeek，这样会走 mock analysis：
   - `USE_DEEPSEEK=false`
-- [ ] Start the backend:
+- [ ] 启动后端：
   - `uvicorn app.main:app --reload`
-  - or `docker compose up --build`
-- [ ] Open the health endpoint and confirm it responds:
+  - 或 `docker compose up --build`
+- [ ] 打开健康检查接口，确认后端能正常响应：
   - `GET http://localhost:8000/health`
-- [ ] Confirm the API base URL to use on the phone:
-  - Android emulator: `http://10.0.2.2:8000`
-  - Real device on the same Wi-Fi: `http://<computer-lan-ip>:8000`
-  - Remote server: `https://<server-domain>`
+- [ ] 确认手机端要填写的 API 地址：
+  - Android 模拟器：`http://10.0.2.2:8000`
+  - 同一 Wi-Fi 下的真实手机：`http://<computer-lan-ip>:8000`
+  - 远程服务器：`https://<server-domain>`
 
-## 2. Import And Build Android App
+## 2. Android Studio 导入和构建
 
-- [ ] Open Android Studio.
-- [ ] Choose **Open** and select `android/VoiceCoachRecorder`.
-- [ ] Wait for Gradle sync to finish.
-- [ ] Confirm the `app` run configuration exists.
-- [ ] Build the project.
-- [ ] Run unit tests if available from Android Studio or command line:
+- [ ] 打开 Android Studio。
+- [ ] 选择 **Open**，打开 `android/VoiceCoachRecorder`。
+- [ ] 等待 Gradle sync 完成。
+- [ ] 确认能看到 `app` 运行配置。
+- [ ] 构建项目，确认没有编译错误。
+- [ ] 如果本机环境支持，可以运行单元测试：
   - `gradle testDebugUnitTest`
 
-## 3. Install On Real Android Device
+## 3. 真机安装 APK
 
-- [ ] Enable Developer Options on the device.
-- [ ] Enable USB debugging.
-- [ ] Connect the device by USB.
-- [ ] Accept the debugging prompt on the phone.
-- [ ] Select the physical device in Android Studio.
-- [ ] Run the `app` configuration.
-- [ ] Confirm the app opens on the phone.
+- [ ] 在 Android 手机上打开开发者选项。
+- [ ] 开启 USB 调试。
+- [ ] 用 USB 连接手机和电脑。
+- [ ] 在手机上同意 USB 调试授权。
+- [ ] 在 Android Studio 里选择这台真实设备。
+- [ ] 运行 `app` 配置，把应用安装到手机上。
+- [ ] 确认应用能正常打开。
 
-## 4. Permission Flows
+## 4. 权限流程
 
-### Microphone Permission
+### 麦克风权限
 
-- [ ] Tap the recording start control.
-- [ ] Confirm Android shows the microphone permission prompt.
-- [ ] Allow microphone access.
-- [ ] Confirm recording can start after permission is granted.
-- [ ] Repeat once with permission denied if practical, then confirm the app does not record without permission.
+- [ ] 点击录音开始按钮。
+- [ ] 确认系统弹出麦克风权限申请。
+- [ ] 允许麦克风权限。
+- [ ] 确认授权后可以开始录音。
+- [ ] 如果方便，也可以测试一次拒绝权限，确认应用不会在没有麦克风权限时录音。
 
-### Notification Permission
+### 通知权限
 
-- [ ] On Android 13 or later, confirm Android shows the notification permission prompt.
-- [ ] Allow notifications.
-- [ ] Confirm a persistent recording notification appears while recording or paused.
-- [ ] If notification permission is denied, confirm recording behavior is blocked or clearly not usable until notification permission is allowed.
+- [ ] 如果手机是 Android 13 或更高版本，确认系统弹出通知权限申请。
+- [ ] 允许通知权限。
+- [ ] 确认录音中或暂停时，通知栏里一直有一条常驻录音通知。
+- [ ] 如果拒绝通知权限，确认应用不会在没有常驻通知的情况下悄悄录音，或者会明确提示无法正常录音。
 
-## 5. Recording Controls
+## 5. 录音控制
 
-### Start Recording
+### 开始录音
 
-- [ ] Tap start in the app.
-- [ ] Confirm the UI shows an active recording state.
-- [ ] Confirm the persistent foreground service notification is visible.
-- [ ] Speak for at least 10 seconds.
+- [ ] 在 App 内点击开始录音。
+- [ ] 确认界面显示正在录音。
+- [ ] 确认通知栏出现常驻的前台服务录音通知。
+- [ ] 对着手机说话至少 10 秒。
 
-### Pause And Resume From App
+### App 内暂停和继续
 
-- [ ] Tap pause in the app.
-- [ ] Confirm the UI shows paused state.
-- [ ] Confirm the notification remains visible.
-- [ ] Tap resume in the app.
-- [ ] Confirm recording resumes.
-- [ ] Speak for another 5 seconds.
+- [ ] 在 App 内点击暂停。
+- [ ] 确认界面显示暂停状态。
+- [ ] 确认通知栏录音通知仍然存在。
+- [ ] 在 App 内点击继续。
+- [ ] 确认录音恢复。
+- [ ] 再说话至少 5 秒。
 
-### Pause And Resume From Notification
+### 通知栏暂停和继续
 
-- [ ] Pull down the notification shade.
-- [ ] Tap pause from the recording notification.
-- [ ] Confirm the app UI updates to paused state.
-- [ ] Tap resume from the notification.
-- [ ] Confirm the app UI updates to recording state.
+- [ ] 下拉系统通知栏。
+- [ ] 点击录音通知里的暂停按钮。
+- [ ] 确认 App 界面同步变成暂停状态。
+- [ ] 点击录音通知里的继续按钮。
+- [ ] 确认 App 界面同步变成正在录音状态。
 
-### Stop Recording
+### 停止录音
 
-- [ ] Tap stop in the app or notification.
-- [ ] Confirm recording stops.
-- [ ] Confirm the foreground notification is dismissed.
-- [ ] Confirm a new session appears in the session list.
+- [ ] 在 App 内或通知栏点击停止。
+- [ ] 确认录音停止。
+- [ ] 确认前台服务通知消失。
+- [ ] 确认 App 的会话列表里出现一条新的录音记录。
 
-## 6. Verify Local Recording File
+## 6. 确认本地录音文件
 
-- [ ] In the app, note the new session timestamp or file name.
-- [ ] Use Android Studio Device Explorer.
-- [ ] Browse the app-private external files area for the app package.
-- [ ] Confirm a `.m4a` recording file exists.
-- [ ] Confirm the file size is greater than zero.
-- [ ] Pull the file locally if needed and play it to confirm audio was captured.
+- [ ] 在 App 里记下新录音记录的时间或文件名。
+- [ ] 打开 Android Studio 的 Device Explorer。
+- [ ] 找到该应用的 app-private external files 目录。
+- [ ] 确认里面存在 `.m4a` 录音文件。
+- [ ] 确认文件大小大于 0。
+- [ ] 如有需要，把文件拉到电脑上播放，确认能听到刚才录下的声音。
 
-## 7. Backend Settings
+## 7. 配置后端地址和 Device Token
 
-- [ ] Open backend settings in the app.
-- [ ] Set server URL:
-  - For a real device on local Wi-Fi, use `http://<computer-lan-ip>:8000`.
-  - Do not use `localhost` on a real phone unless the backend runs on the phone.
-- [ ] Set the device token expected by the backend test configuration.
-- [ ] Save settings.
+- [ ] 打开 App 里的后端设置。
+- [ ] 填写 server URL：
+  - 如果是真机连本地电脑后端，填写 `http://<computer-lan-ip>:8000`。
+  - 不要在真实手机上填写 `localhost`，除非后端真的运行在手机上。
+- [ ] 填写后端测试配置中要求的 device token。
+- [ ] 保存设置。
 
-## 8. Upload And Review Results
+## 8. 上传录音并查看结果
 
-### Upload Recording
+### 上传录音
 
-- [ ] Select the recorded session.
-- [ ] Tap upload.
-- [ ] Confirm upload completes successfully.
-- [ ] Confirm the session has a backend session ID.
-- [ ] Confirm backend logs show the upload request.
+- [ ] 选择刚才录制的会话。
+- [ ] 点击上传。
+- [ ] 确认上传成功。
+- [ ] 确认该会话拿到了后端 session ID。
+- [ ] 查看后端日志，确认收到了上传请求。
 
-### Fetch Transcript
+### 查看转写
 
-- [ ] Tap fetch transcript.
-- [ ] Confirm Chinese mock transcript segments are displayed.
-- [ ] Confirm speaker labels are generic, such as `Speaker 0` or `Speaker 1`, unless manually corrected in backend tests.
+- [ ] 点击查看或刷新转写。
+- [ ] 确认能看到中文 mock transcript segments。
+- [ ] 确认说话人标签是通用标签，例如 `Speaker 0` 或 `Speaker 1`，除非后端测试里已经手动改过标签。
 
-### Fetch Analysis
+### 查看分析
 
-- [ ] Tap fetch analysis.
-- [ ] Confirm deterministic mock analysis JSON or formatted analysis is displayed.
-- [ ] Confirm no DeepSeek API key is required when `USE_DEEPSEEK=false`.
+- [ ] 点击查看或刷新分析。
+- [ ] 确认能看到确定性的 mock analysis JSON 或格式化后的分析内容。
+- [ ] 确认在 `USE_DEEPSEEK=false` 时，不需要 DeepSeek API key 也能看到 mock 分析。
 
-### Fetch Daily Review
+### 查看每日复盘
 
-- [ ] Tap daily review for today's date if the app exposes it.
-- [ ] Confirm the response includes the uploaded session in daily totals.
-- [ ] Confirm mock daily coaching output is displayed when DeepSeek is disabled.
+- [ ] 如果 App 已提供每日复盘入口，选择今天日期并点击查看。
+- [ ] 确认每日复盘统计里包含刚上传的会话。
+- [ ] 确认 DeepSeek 关闭时，会显示 mock daily coaching 内容。
 
-## 9. Common Troubleshooting
+## 9. 常见问题排查
 
-### Phone Cannot Reach Backend
+### 手机访问不到后端
 
-- Check that the phone and backend computer are on the same network.
-- Use the computer LAN IP, not `localhost`.
-- Confirm Windows firewall or cloud firewall allows the backend port.
-- From the phone browser, try opening `http://<computer-lan-ip>:8000/health`.
-- If using Docker, confirm the container exposes port `8000`.
+- 确认手机和运行后端的电脑在同一个网络里。
+- 真实手机要填写电脑的局域网 IP，不要填写 `localhost`。
+- 确认 Windows 防火墙或云服务器安全组放行了后端端口。
+- 在手机浏览器里打开 `http://<computer-lan-ip>:8000/health` 试一下。
+- 如果使用 Docker，确认容器已经暴露 `8000` 端口。
 
-### Wrong Device Token
+### Device Token 错误
 
-- Confirm the app token matches the backend expected token.
-- Check for extra spaces before or after the token.
-- Re-save settings and retry upload.
-- Confirm backend logs show authentication failure rather than upload parsing failure.
+- 确认 App 里填写的 token 和后端期望的 token 完全一致。
+- 检查 token 前后有没有多余空格。
+- 重新保存设置后再上传一次。
+- 查看后端日志，区分是认证失败还是上传文件解析失败。
 
-### Cleartext HTTP Blocked
+### HTTP 明文请求被拦截
 
-- Prefer HTTPS for remote servers.
-- For local development, confirm the Android network security configuration or manifest allows the intended cleartext host.
-- If using a LAN IP over `http://`, verify the debug build is configured to allow it.
+- 远程服务器优先使用 HTTPS。
+- 本地开发时，确认 Android 网络安全配置或 manifest 允许当前明文 HTTP 地址。
+- 如果使用局域网 IP 加 `http://`，确认 debug build 允许访问这个地址。
 
-### Android Foreground Service Permission Issue
+### Android 前台服务权限问题
 
-- Confirm the app has microphone permission.
-- Confirm notification permission is granted on Android 13 or later.
-- Confirm the manifest includes foreground service microphone permissions.
-- Test on a physical device because emulator and vendor ROM behavior can differ.
+- 确认已经允许麦克风权限。
+- Android 13 或更高版本还要确认已经允许通知权限。
+- 确认 manifest 里包含前台服务和麦克风前台服务相关权限。
+- 尽量用真实设备测试，因为模拟器和不同厂商系统表现可能不一样。
 
-### Notification Not Showing
+### 通知不显示
 
-- Confirm notification permission is allowed.
-- Check the system notification settings for the app.
-- Confirm Do Not Disturb is not hiding notifications.
-- Start recording again and watch for the persistent recording notification.
+- 确认系统已经允许该 App 发送通知。
+- 打开系统设置，检查该 App 的通知开关。
+- 确认勿扰模式没有隐藏通知。
+- 重新开始录音，观察通知栏是否出现常驻录音通知。
 
-### Upload Fails
+### 上传失败
 
-- Confirm the backend health endpoint works from the phone.
-- Confirm the server URL has no trailing path such as `/api/v1`.
-- Confirm the `.m4a` file exists and is non-empty.
-- Check backend logs for request size, auth, or validation errors.
-- Retry with a short recording under one minute.
+- 确认手机浏览器能打开后端健康检查接口。
+- 确认 server URL 不要带 `/api/v1` 这样的额外路径。
+- 确认 `.m4a` 文件存在，并且文件大小不为 0。
+- 查看后端日志，排查请求大小、认证或字段校验错误。
+- 先用 1 分钟以内的短录音重试。
 
-### Transcript Empty
+### 转写为空
 
-- Confirm upload completed and returned a backend session ID.
-- Wait a few seconds and fetch transcript again.
-- Confirm `ASR_PROVIDER=mock` for local testing.
-- Check backend logs for processing failures.
+- 确认上传已经成功，并且返回了后端 session ID。
+- 等几秒后再刷新转写。
+- 本地测试时确认 `ASR_PROVIDER=mock`。
+- 查看后端日志，确认 mock 处理流程没有失败。
 
-### Analysis Not Ready Yet
+### 分析还没生成
 
-- Fetch analysis again after a short wait.
-- Confirm mock processing reached the analyzed status.
-- Confirm `USE_DEEPSEEK=false` when no DeepSeek key is configured.
-- Check backend logs for invalid analysis JSON, auth errors, or failed processing state.
+- 等几秒后再次刷新分析。
+- 确认 mock 处理流程已经进入 analyzed 状态。
+- 没有配置 DeepSeek key 时，确认 `USE_DEEPSEEK=false`。
+- 查看后端日志，排查 analysis JSON、认证或处理状态失败问题。
 
-## 10. Pass Criteria
+## 10. 通过标准
 
-- [ ] The app records only after explicit user action.
-- [ ] Recording always shows a persistent foreground notification.
-- [ ] Pause, resume, and stop work from both app and notification.
-- [ ] A non-empty `.m4a` file is saved in app-private storage.
-- [ ] Upload succeeds against the backend.
-- [ ] Transcript, analysis, and daily review can be fetched with mock processing.
-- [ ] No hidden recording, stealth recording, or phone-call recording behavior is present.
+- [ ] App 只有在用户明确点击开始后才录音。
+- [ ] 录音期间始终显示常驻前台服务通知。
+- [ ] App 内和通知栏里的暂停、继续、停止都能正常工作。
+- [ ] app-private storage 中保存了非空的 `.m4a` 文件。
+- [ ] 录音能成功上传到后端。
+- [ ] mock 处理流程下，可以查看转写、分析和每日复盘。
+- [ ] 没有隐藏录音、静默录音或电话录音行为。
