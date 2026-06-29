@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Voice Coach Recorder</string>
+    <string name="recording_channel_name">Recording status</string>
+</resources>
