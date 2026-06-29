@@ -1,0 +1,37 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: sqlite:////app/data/voice_coach.db
+      STORAGE_DIR: /app/data/storage
+    ports:
+      - "8000:8000"
+    volumes:
+      - backend_data:/app/data
+
+  redis:
+    image: redis:7-alpine
+    profiles: ["optional"]
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["optional"]
+    environment:
+      POSTGRES_DB: voicecoach
+      POSTGRES_USER: voicecoach
+      POSTGRES_PASSWORD: voicecoach
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  backend_data:
+  postgres_data:
