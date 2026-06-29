@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -17,6 +17,7 @@ from app.schemas import (
     TranscriptResponse,
 )
 from app.security import require_device_token
+from app.services.pipeline import process_audio_session
 from app.services.storage import AudioStorage
 
 router = APIRouter(
@@ -47,6 +48,7 @@ def parse_metadata(metadata: str | None) -> dict:
     status_code=status.HTTP_201_CREATED,
 )
 def create_audio_session(
+    background_tasks: BackgroundTasks,
     audio: UploadFile = File(...),
     device_id: str = Form(...),
     started_at: datetime = Form(...),
@@ -73,6 +75,7 @@ def create_audio_session(
     )
     db.add(session)
     db.commit()
+    background_tasks.add_task(process_audio_session, session_id, settings)
 
     return AudioSessionCreateResponse(session_id=session_id, status=session.status)
 
