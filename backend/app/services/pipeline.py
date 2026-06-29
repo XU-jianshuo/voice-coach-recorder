@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.adapters.base import AnalysisAdapter, ASRAdapter, DiarizationAdapter
 from app.adapters.deepseek import build_analysis_adapter
+from app.adapters.funasr import FunASRAdapter
 from app.adapters.mock import MockAnalysisAdapter, MockASRAdapter, NoOpDiarizationAdapter
 from app.config import Settings
 from app.db import create_engine_for
@@ -24,7 +25,9 @@ class ProcessingPipeline:
         settings: Settings | None = None,
     ):
         self.db = db
-        self.asr_adapter = asr_adapter or MockASRAdapter()
+        self.asr_adapter = asr_adapter or (
+            build_asr_adapter(settings) if settings else MockASRAdapter()
+        )
         self.diarization_adapter = diarization_adapter or NoOpDiarizationAdapter()
         self.analysis_adapter = analysis_adapter or (
             build_analysis_adapter(settings) if settings else MockAnalysisAdapter()
@@ -94,3 +97,12 @@ def process_audio_session(session_id: str, settings: Settings) -> None:
         ProcessingPipeline(db, settings=settings).process(session_id)
     finally:
         db.close()
+
+
+def build_asr_adapter(settings: Settings) -> ASRAdapter:
+    provider = settings.asr_provider.lower().strip()
+    if provider == "mock":
+        return MockASRAdapter()
+    if provider == "funasr":
+        return FunASRAdapter(settings)
+    raise ValueError(f"Unsupported ASR_PROVIDER: {settings.asr_provider}")
