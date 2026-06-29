@@ -10,6 +10,7 @@ from app.config import Settings, get_settings
 from app.db import Base, create_engine_for, get_db
 from app.errors import error_response
 from app.routers.audio_sessions import router as audio_sessions_router
+from app.routers.daily_review import router as daily_review_router
 from app.routers.health import router as health_router
 from app.routers.hotwords import router as hotwords_router
 from app.routers.speaker_profiles import router as speaker_profiles_router
@@ -68,6 +69,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(hotwords_router, prefix=app_settings.api_prefix)
     app.include_router(speaker_profiles_router, prefix=app_settings.api_prefix)
     app.include_router(transcript_segments_router, prefix=app_settings.api_prefix)
+    app.include_router(daily_review_router, prefix=app_settings.api_prefix)
     return app
 
 
