@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     sensevoice_model_dir: str = "./models/sensevoice"
     enable_diarization: bool = False
 
+    raw_audio_retention_days: int = Field(default=30, ge=1)
+    backup_retention_days: int = Field(default=14, ge=1)
+    require_https: bool = False
+
     cors_origins: str = "*"
     log_level: str = "INFO"
 
