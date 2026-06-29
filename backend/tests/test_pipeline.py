@@ -9,7 +9,9 @@ from app.services.pipeline import ProcessingPipeline
 
 
 class FailingASRAdapter:
-    def transcribe(self, session: AudioSession) -> list[TranscriptSegmentData]:
+    def transcribe(
+        self, session: AudioSession, hotwords: list[str] | None = None
+    ) -> list[TranscriptSegmentData]:
         raise RuntimeError("mock ASR failure")
 
 

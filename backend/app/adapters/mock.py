@@ -3,7 +3,9 @@ from app.models import AudioSession
 
 
 class MockASRAdapter:
-    def transcribe(self, session: AudioSession) -> list[TranscriptSegmentData]:
+    def transcribe(
+        self, session: AudioSession, hotwords: list[str] | None = None
+    ) -> list[TranscriptSegmentData]:
         return [
             TranscriptSegmentData(
                 start_ms=0,

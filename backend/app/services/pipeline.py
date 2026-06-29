@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.adapters.base import AnalysisAdapter, ASRAdapter, DiarizationAdapter
+from app.adapters.deepseek import build_analysis_adapter
 from app.adapters.mock import MockAnalysisAdapter, MockASRAdapter, NoOpDiarizationAdapter
 from app.config import Settings
 from app.db import create_engine_for
@@ -9,6 +10,7 @@ from app.models import (
     CommunicationAnalysis,
     SessionStatus,
     TranscriptSegment,
+    Hotword,
 )
 
 
@@ -19,11 +21,14 @@ class ProcessingPipeline:
         asr_adapter: ASRAdapter | None = None,
         diarization_adapter: DiarizationAdapter | None = None,
         analysis_adapter: AnalysisAdapter | None = None,
+        settings: Settings | None = None,
     ):
         self.db = db
         self.asr_adapter = asr_adapter or MockASRAdapter()
         self.diarization_adapter = diarization_adapter or NoOpDiarizationAdapter()
-        self.analysis_adapter = analysis_adapter or MockAnalysisAdapter()
+        self.analysis_adapter = analysis_adapter or (
+            build_analysis_adapter(settings) if settings else MockAnalysisAdapter()
+        )
 
     def process(self, session_id: str) -> AudioSession:
         session = self.db.get(AudioSession, session_id)
@@ -32,7 +37,8 @@ class ProcessingPipeline:
 
         try:
             self._set_status(session, SessionStatus.transcribing)
-            asr_segments = self.asr_adapter.transcribe(session)
+            hotwords = [hotword.text for hotword in self.db.query(Hotword).all()]
+            asr_segments = self.asr_adapter.transcribe(session, hotwords=hotwords)
             segments = self.diarization_adapter.assign_speakers(asr_segments)
             for segment in segments:
                 self.db.add(
@@ -85,6 +91,6 @@ def process_audio_session(session_id: str, settings: Settings) -> None:
     session_local = sessionmaker(bind=engine, autoflush=False, autocommit=False)
     db = session_local()
     try:
-        ProcessingPipeline(db).process(session_id)
+        ProcessingPipeline(db, settings=settings).process(session_id)
     finally:
         db.close()
