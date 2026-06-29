@@ -4,8 +4,13 @@ from datetime import datetime, timezone
 import httpx
 
 from app.adapters.base import TranscriptSegmentData
-from app.adapters.deepseek import DeepSeekAnalysisAdapter, build_analysis_adapter
-from app.adapters.mock import MockAnalysisAdapter
+from app.adapters.deepseek import (
+    DeepSeekAnalysisAdapter,
+    DeepSeekDailyReviewAdapter,
+    build_analysis_adapter,
+    build_daily_review_adapter,
+)
+from app.adapters.mock import MockAnalysisAdapter, MockDailyReviewAdapter
 from app.config import Settings
 from app.models import AudioSession
 
@@ -151,3 +156,70 @@ def test_analysis_adapter_falls_back_to_mock_without_api_key():
     adapter = build_analysis_adapter(Settings(use_deepseek=True, deepseek_api_key=""))
 
     assert isinstance(adapter, MockAnalysisAdapter)
+
+
+def test_deepseek_daily_review_adapter_returns_validated_json_response():
+    valid_content = json.dumps(
+        {
+            "date": "2026-06-25",
+            "daily_summary": "Daily DeepSeek summary",
+            "valid_session_count": 2,
+            "main_topics": ["续保推进"],
+            "frequent_objections": ["费用政策不清晰"],
+            "overall_strengths": ["目标清楚"],
+            "overall_weaknesses": ["闭环不足"],
+            "top_improvement": {
+                "problem": "责任人不明确",
+                "why_it_matters": "影响执行",
+                "suggestion": "结束前确认责任人",
+            },
+            "best_phrase_today": "请明天下午给第一版清单。",
+            "phrase_to_replace": {
+                "original": "推进一下",
+                "improved": "请明天下午前给第一版清单。",
+            },
+            "priority_follow_ups": [{"task": "确认清单"}],
+            "tomorrow_focus": ["确认闭环"],
+        },
+        ensure_ascii=False,
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content)
+        assert payload["model"] == "deepseek-chat"
+        assert payload["response_format"] == {"type": "json_object"}
+        assert request.headers["Authorization"] == "Bearer test-key"
+        assert "test-key" not in request.content.decode()
+        return make_openai_response(valid_content)
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    adapter = DeepSeekDailyReviewAdapter(
+        Settings(
+            use_deepseek=True,
+            deepseek_api_key="test-key",
+            deepseek_base_url="https://deepseek.example",
+            deepseek_model="deepseek-chat",
+        ),
+        client=client,
+    )
+
+    review = adapter.summarize_daily_review(
+        {
+            "date": "2026-06-25",
+            "session_summaries": [],
+            "todos": [],
+            "score_averages": {},
+        }
+    )
+
+    assert review.daily_summary == "Daily DeepSeek summary"
+    assert review.valid_session_count == 2
+    assert review.frequent_objections == ["费用政策不清晰"]
+
+
+def test_daily_review_adapter_falls_back_to_mock_without_api_key():
+    adapter = build_daily_review_adapter(
+        Settings(use_deepseek=True, deepseek_api_key="")
+    )
+
+    assert isinstance(adapter, MockDailyReviewAdapter)

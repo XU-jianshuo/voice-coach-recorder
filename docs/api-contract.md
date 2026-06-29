@@ -12,8 +12,6 @@ Authorization: Bearer <DEVICE_TOKEN>
 
 ### GET /health
 
-Response:
-
 ```json
 {
   "status": "ok",
@@ -29,15 +27,11 @@ Create an audio session and upload audio.
 
 Content type: `multipart/form-data`
 
-Fields:
-
-- `audio`: file, required.
-- `device_id`: string, required.
-- `started_at`: ISO datetime string, required.
-- `ended_at`: ISO datetime string, required.
-- `metadata`: JSON string, optional.
-
-Example response:
+- `audio`: file, required
+- `device_id`: string, required
+- `started_at`: ISO datetime string, required
+- `ended_at`: ISO datetime string, required
+- `metadata`: JSON string, optional
 
 ```json
 {
@@ -48,8 +42,6 @@ Example response:
 
 ### GET /api/v1/audio-sessions/{session_id}
 
-Response:
-
 ```json
 {
   "id": "session_20260625_093012_abcd",
@@ -57,28 +49,9 @@ Response:
   "started_at": "2026-06-25T09:30:12+08:00",
   "ended_at": "2026-06-25T09:52:40+08:00",
   "status": "analyzed",
-  "scene": "渠道沟通",
+  "scene": "channel",
   "privacy_level": "work",
   "created_at": "2026-06-25T09:53:00+08:00"
-}
-```
-
-### GET /api/v1/audio-sessions
-
-Query parameters:
-
-- `date`: optional, YYYY-MM-DD.
-- `status`: optional.
-- `limit`: optional, default 50.
-- `offset`: optional, default 0.
-
-Response:
-
-```json
-{
-  "items": [],
-  "limit": 50,
-  "offset": 0
 }
 ```
 
@@ -86,19 +59,17 @@ Response:
 
 ### GET /api/v1/audio-sessions/{session_id}/transcript
 
-Response:
-
 ```json
 {
   "session_id": "session_20260625_093012_abcd",
   "segments": [
     {
-      "id": "seg_001",
+      "id": 1,
       "start_ms": 1200,
       "end_ms": 8500,
-      "speaker_id": "speaker_me",
-      "speaker_label": "我",
-      "text": "今天主要跟你确认一下车险续保和驾意险联动的推进节奏。",
+      "speaker_id": "speaker_0",
+      "speaker_label": "Speaker 0",
+      "text": "今天主要确认续保推进清单。",
       "confidence": 0.91
     }
   ]
@@ -109,24 +80,16 @@ Response:
 
 ### GET /api/v1/audio-sessions/{session_id}/analysis
 
-Response:
-
 ```json
 {
   "session_id": "session_20260625_093012_abcd",
-  "summary": "本次沟通围绕渠道推动节奏、费用政策和客户清单展开。",
+  "summary": "本次沟通围绕续保推进和后续动作展开。",
   "scores": {
     "goal_clarity": 8,
-    "question_quality": 7,
-    "business_actionability": 7,
-    "responsibility_closure": 5,
-    "objection_handling": 7,
-    "rhythm_control": 6,
-    "expression_efficiency": 6,
-    "follow_up_closure": 6
+    "question_quality": 7
   },
-  "strengths": ["开场目标较清楚"],
-  "weaknesses": ["没有明确责任人"],
+  "strengths": ["开场目标清楚"],
+  "weaknesses": ["责任人还可以更明确"],
   "todos": [
     {
       "owner": "我",
@@ -136,8 +99,8 @@ Response:
   ],
   "better_phrases": [
     {
-      "original": "你们先推进一下。",
-      "improved": "这件事今天先定负责人和时间点，周三前给我第一版清单。"
+      "original": "你们先推进一下",
+      "improved": "请明天下午前给第一版清单，并标明责任人和完成时间。"
     }
   ]
 }
@@ -147,22 +110,18 @@ Response:
 
 ### PATCH /api/v1/transcript-segments/{segment_id}/speaker
 
-Request:
-
 ```json
 {
-  "speaker_label": "我",
-  "speaker_profile_id": "speaker_me",
+  "speaker_label": "疑似张三",
+  "speaker_profile_id": "speaker_known",
   "apply_to_session": true
 }
 ```
 
-Response:
-
 ```json
 {
-  "segment_id": "seg_001",
-  "speaker_label": "我",
+  "segment_id": 1,
+  "speaker_label": "疑似张三",
   "updated": true
 }
 ```
@@ -173,8 +132,6 @@ Response:
 
 ### POST /api/v1/speaker-profiles
 
-Request:
-
 ```json
 {
   "display_name": "我",
@@ -182,28 +139,13 @@ Request:
 }
 ```
 
+Supported `type` values: `self`, `known`, `unknown`.
+
 ## Hotwords
 
 ### GET /api/v1/hotwords
 
-Response:
-
-```json
-{
-  "items": [
-    {
-      "id": "hotword_001",
-      "text": "驾意险",
-      "category": "insurance_product",
-      "weight": 10
-    }
-  ]
-}
-```
-
 ### POST /api/v1/hotwords
-
-Request:
 
 ```json
 {
@@ -219,24 +161,60 @@ Request:
 
 ### GET /api/v1/daily-review?date=YYYY-MM-DD
 
-Response:
-
 ```json
 {
   "date": "2026-06-25",
-  "valid_session_count": 6,
-  "total_duration_minutes": 135,
-  "user_speaking_ratio": 0.42,
-  "action_item_count": 4,
+  "valid_session_count": 2,
+  "total_duration_minutes": 45,
+  "session_summaries": [
+    {
+      "session_id": "session_20260625_090000_abcd",
+      "started_at": "2026-06-25T09:00:00+00:00",
+      "ended_at": "2026-06-25T09:30:00+00:00",
+      "duration_minutes": 30,
+      "scene": "channel",
+      "summary": "续保推进沟通"
+    }
+  ],
+  "todo_count": 4,
   "unresolved_item_count": 2,
-  "frequent_objections": ["费用政策", "产品支持", "系统流程"],
-  "summary": "今天对外沟通主要集中在渠道推动和续保联动。",
-  "top_improvement": {
-    "problem": "责任压实不足",
-    "suggestion": "每次沟通结束前明确责任人、时间点和交付物。"
+  "frequent_objections": ["费用政策不清晰"],
+  "score_averages": {
+    "goal_clarity": 7,
+    "question_quality": 7
+  },
+  "coaching_summary": {
+    "date": "2026-06-25",
+    "daily_summary": "Daily review summary",
+    "valid_session_count": 2,
+    "main_topics": ["续保推进"],
+    "frequent_objections": ["费用政策不清晰"],
+    "overall_strengths": ["目标清楚"],
+    "overall_weaknesses": ["闭环不足"],
+    "top_improvement": {
+      "problem": "责任人不明确",
+      "why_it_matters": "影响执行",
+      "suggestion": "结束前确认责任人"
+    },
+    "best_phrase_today": "请明天下午给第一版清单。",
+    "phrase_to_replace": {
+      "original": "推进一下",
+      "improved": "请明天下午前给第一版清单。"
+    },
+    "priority_follow_ups": [],
+    "tomorrow_focus": ["确认闭环"]
   }
 }
 ```
+
+## ASR Provider Configuration
+
+- `ASR_PROVIDER=mock`: default local development path.
+- `ASR_PROVIDER=funasr`: optional FunASR/SenseVoice path.
+
+When `funasr` is selected, `FUNASR_MODEL_DIR` must point at installed model files and
+the runtime must include optional FunASR dependencies. Missing dependencies or model files
+fail the processing session clearly without preventing the API server from starting.
 
 ## Status Lifecycle
 
