@@ -11,6 +11,10 @@ from app.db import Base, create_engine_for, get_db
 from app.errors import error_response
 from app.routers.audio_sessions import router as audio_sessions_router
 from app.routers.health import router as health_router
+from app.routers.hotwords import router as hotwords_router
+from app.routers.speaker_profiles import router as speaker_profiles_router
+from app.routers.transcript_segments import router as transcript_segments_router
+from app.services.hotwords import seed_default_hotwords
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -23,6 +27,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         Base.metadata.create_all(bind=app_engine)
+        db = app_session_local()
+        try:
+            seed_default_hotwords(db)
+        finally:
+            db.close()
         yield
 
     app = FastAPI(title=app_settings.app_name, lifespan=lifespan)
@@ -56,6 +65,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(health_router)
     app.include_router(audio_sessions_router, prefix=app_settings.api_prefix)
+    app.include_router(hotwords_router, prefix=app_settings.api_prefix)
+    app.include_router(speaker_profiles_router, prefix=app_settings.api_prefix)
+    app.include_router(transcript_segments_router, prefix=app_settings.api_prefix)
     return app
 
 

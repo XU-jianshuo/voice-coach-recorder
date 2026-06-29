@@ -26,7 +26,9 @@ class AnalysisData:
 
 
 class ASRAdapter(Protocol):
-    def transcribe(self, session: AudioSession) -> list[TranscriptSegmentData]:
+    def transcribe(
+        self, session: AudioSession, hotwords: list[str] | None = None
+    ) -> list[TranscriptSegmentData]:
         """Return normalized transcript segments for an uploaded audio session."""
 
 
