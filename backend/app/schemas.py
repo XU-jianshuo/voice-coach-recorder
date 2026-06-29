@@ -105,3 +105,24 @@ class HotwordResponse(BaseModel):
 
 class HotwordListResponse(BaseModel):
     items: list[HotwordResponse]
+
+
+class DailySessionSummary(BaseModel):
+    session_id: str
+    started_at: datetime
+    ended_at: datetime
+    duration_minutes: float
+    scene: str | None = None
+    summary: str | None = None
+
+
+class DailyReviewResponse(BaseModel):
+    date: str
+    valid_session_count: int
+    total_duration_minutes: float
+    session_summaries: list[DailySessionSummary]
+    todo_count: int
+    unresolved_item_count: int
+    frequent_objections: list[str]
+    score_averages: dict[str, float]
+    coaching_summary: dict
