@@ -25,6 +25,23 @@ class AnalysisData:
     raw_payload: dict | None = None
 
 
+@dataclass(frozen=True)
+class DailyReviewData:
+    date: str
+    daily_summary: str
+    valid_session_count: int
+    main_topics: list
+    frequent_objections: list
+    overall_strengths: list
+    overall_weaknesses: list
+    top_improvement: dict
+    best_phrase_today: str
+    phrase_to_replace: dict
+    priority_follow_ups: list
+    tomorrow_focus: list
+    raw_payload: dict | None = None
+
+
 class ASRAdapter(Protocol):
     def transcribe(
         self, session: AudioSession, hotwords: list[str] | None = None
@@ -44,3 +61,8 @@ class AnalysisAdapter(Protocol):
         self, session: AudioSession, segments: list[TranscriptSegmentData]
     ) -> AnalysisData:
         """Return structured communication analysis for transcript segments."""
+
+
+class DailyReviewAdapter(Protocol):
+    def summarize_daily_review(self, payload: dict) -> DailyReviewData:
+        """Return structured coaching summary for aggregated daily review data."""
